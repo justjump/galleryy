@@ -13,8 +13,7 @@
   "author": "gallery",
   "license": "MIT",
   "devDependencies": {
-    "astro": "^4.0.0",
-    "@astrojs/cloudflare": "^8.0.0"
+    "astro": "^4.0.0"
   },
   "dependencies": {}
 }
