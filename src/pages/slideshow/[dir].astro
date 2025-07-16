@@ -1,5 +1,28 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import fs from 'fs';
+import path from 'path';
+
+// 静态路径生成函数
+export async function getStaticPaths() {
+  const galleryBasePath = path.join(process.cwd(), 'public', 'gallery');
+  const dirs = [];
+  
+  try {
+    const entries = fs.readdirSync(galleryBasePath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        dirs.push({
+          params: { dir: entry.name }
+        });
+      }
+    }
+  } catch (error) {
+    console.warn('无法读取 gallery 目录:', error);
+  }
+  
+  return dirs;
+}
 
 const { dir } = Astro.params;
 
@@ -7,10 +30,7 @@ if (!dir) {
   return Astro.redirect('/');
 }
 
-// 读取指定目录
-import fs from 'fs';
-import path from 'path';
-
+// 在构建时读取图片和文字数据
 const galleryDir = path.join(process.cwd(), 'public', 'gallery', dir);
 
 if (!fs.existsSync(galleryDir)) {
@@ -69,13 +89,13 @@ const imageData = images.map(image => ({
           </div>
         ))}
         
-        <button class="navigation prev" onclick="changeSlide(-1)">❮</button>
-        <button class="navigation next" onclick="changeSlide(1)">❯</button>
+        <button class="navigation prev" id="prev-btn">❮</button>
+        <button class="navigation next" id="next-btn">❯</button>
       </div>
       
       <div class="dots-container">
         {imageData.map((_, index) => (
-          <span class={`dot ${index === 0 ? 'active' : ''}`} onclick={`currentSlide(${index + 1})`}></span>
+          <span class={`dot ${index === 0 ? 'active' : ''}`} data-slide={index + 1}></span>
         ))}
       </div>
       
@@ -177,6 +197,24 @@ const imageData = images.map(image => ({
       if (imageData.length > 0) {
         startAutoSlide();
       }
+      
+      // 绑定导航按钮事件
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => changeSlide(-1));
+      }
+      
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => changeSlide(1));
+      }
+      
+      // 绑定圆点事件
+      const dots = document.querySelectorAll('.dot');
+      dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => currentSlide(index + 1));
+      });
       
       // 双击切换全屏
       document.addEventListener('dblclick', toggleFullscreen);
@@ -428,52 +466,82 @@ const imageData = images.map(image => ({
   }
   
   /* 全屏模式 */
-  .fullscreen-mode {
+  body.fullscreen-mode {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: black;
+    background: white;
     z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: hidden;
   }
   
-  .fullscreen-mode .slideshow-wrapper {
-    width: 100%;
-    height: 100%;
+  body.fullscreen-mode .slideshow-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+    padding: 0;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  body.fullscreen-mode .slideshow-wrapper {
+    width: 100vw;
+    height: 100vh;
     max-width: none;
     border-radius: 0;
     box-shadow: none;
+    background: white;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
   }
   
-  .fullscreen-mode .slide img {
-    height: calc(100vh - 100px);
-    object-fit: contain;
-  }
-  
-  .fullscreen-mode .controls,
-  .fullscreen-mode .dots-container,
-  .fullscreen-mode .navigation,
-  .fullscreen-mode .slide-counter {
+  body.fullscreen-mode .slide {
+    height: 100vh;
     display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
   }
   
-  .fullscreen-mode .slide-caption {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 20px;
-    font-size: 1.5em;
+  body.fullscreen-mode .slide.active {
+    display: flex;
+  }
+  
+  body.fullscreen-mode .slide img {
+    max-width: 90vw;
+    max-height: calc(100vh - 120px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    background: white;
+  }
+  
+  body.fullscreen-mode .controls,
+  body.fullscreen-mode .dots-container,
+  body.fullscreen-mode .navigation,
+  body.fullscreen-mode .slide-counter {
+    display: none !important;
+  }
+  
+  body.fullscreen-mode .slide-caption {
+    background: rgba(102, 126, 234, 0.1);
+    color: #333;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-style: normal;
     text-align: center;
+    border-radius: 10px;
+    margin: 0 20px;
+    max-width: 80vw;
+    text-shadow: none;
   }
   
   @media (max-width: 768px) {

@@ -373,13 +373,13 @@ foreach ($images as $index => $image) {
                     <span id="current-slide">1</span> / <?php echo count($imageData); ?>
                 </div>
                 
-                <button class="navigation prev" onclick="changeSlide(-1)">❮</button>
-                <button class="navigation next" onclick="changeSlide(1)">❯</button>
+                <button class="navigation prev" id="prevBtn">❮</button>
+                <button class="navigation next" id="nextBtn">❯</button>
             </div>
             
             <div class="dots-container">
                 <?php foreach ($imageData as $index => $data): ?>
-                    <span class="dot <?php echo $index === 0 ? 'active' : ''; ?>" onclick="currentSlide(<?php echo $index + 1; ?>)"></span>
+                    <span class="dot <?php echo $index === 0 ? 'active' : ''; ?>" data-slide="<?php echo $index + 1; ?>"></span>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
@@ -524,6 +524,33 @@ foreach ($images as $index => $image) {
                         document.body.style.cursor = 'none';
                     }
                 }, 3000);
+            }
+        });
+        
+        // 添加按钮和圆点事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const dots = document.getElementsByClassName('dot');
+            
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function() {
+                    changeSlide(-1);
+                });
+            }
+            
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function() {
+                    changeSlide(1);
+                });
+            }
+            
+            // 为每个圆点添加点击事件
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].addEventListener('click', function() {
+                    const slideNumber = parseInt(this.getAttribute('data-slide'));
+                    currentSlide(slideNumber);
+                });
             }
         });
         
