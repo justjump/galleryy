@@ -1,0 +1,141 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// 读取gallery目录
+import fs from 'fs';
+import path from 'path';
+
+const galleryDir = path.join(process.cwd(), 'public', 'gallery');
+const subdirs = [];
+
+if (fs.existsSync(galleryDir)) {
+  const items = fs.readdirSync(galleryDir);
+  for (const item of items) {
+    const itemPath = path.join(galleryDir, item);
+    if (fs.statSync(itemPath).isDirectory()) {
+      // 计算图片数量
+      const files = fs.readdirSync(itemPath);
+      const imageCount = files.filter(f => 
+        /\.(jpg|jpeg|png|gif|webp)$/i.test(f)
+      ).length;
+      
+      subdirs.push({
+        name: item,
+        imageCount
+      });
+    }
+  }
+}
+---
+
+<Layout title="图片画廊">
+  <main class="container">
+    <h1>🎨 图片画廊</h1>
+    
+    {subdirs.length === 0 ? (
+      <div class="empty-message">
+        📸 暂无画廊目录，请在 gallery 目录下创建子目录
+      </div>
+    ) : (
+      <div class="gallery-grid">
+        {subdirs.map(subdir => (
+          <div class="gallery-item" onclick={`location.href='/slideshow/${subdir.name}'`}>
+            <div class="gallery-name">📁 {subdir.name}</div>
+            <div class="gallery-info">包含 {subdir.imageCount} 张图片</div>
+            <a href={`/slideshow/${subdir.name}`} class="view-button" onclick="event.stopPropagation()">
+              查看画廊
+            </a>
+          </div>
+        ))}
+      </div>
+    )}
+  </main>
+</Layout>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  h1 {
+    text-align: center;
+    color: white;
+    margin-bottom: 40px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+  }
+  
+  .gallery-item {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  }
+  
+  .gallery-name {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  .gallery-info {
+    color: #666;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .view-button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: opacity 0.3s ease;
+  }
+  
+  .view-button:hover {
+    opacity: 0.9;
+  }
+  
+  .empty-message {
+    text-align: center;
+    color: white;
+    font-size: 1.2em;
+    margin-top: 50px;
+  }
+  
+  body {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+</style>
